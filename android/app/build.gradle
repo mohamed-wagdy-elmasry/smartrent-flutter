@@ -1,0 +1,88 @@
+import java.util.Properties
+
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    id "dev.flutter.flutter-gradle-plugin"
+    id "com.google.gms.google-services"
+}
+
+def keystorePropertiesFile = rootProject.file("key.properties")
+if (!keystorePropertiesFile.exists()) {
+    keystorePropertiesFile = rootProject.file("../key.properties")
+}
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+android {
+    namespace = "com.next.smartrent"
+        ndkVersion = "28.2.13676358"
+    compileSdk = flutter.compileSdkVersion
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_17.toString()
+    }
+
+    signingConfigs {
+        release {
+            if (keystoreProperties["storeFile"] != null) {
+                def sf = keystoreProperties["storeFile"]
+                def resolvedFile = rootProject.file(sf)
+                if (!resolvedFile.exists()) {
+                    resolvedFile = file(sf)
+                }
+                if (!resolvedFile.exists()) {
+                    resolvedFile = rootProject.file("../" + sf)
+                }
+                storeFile = resolvedFile
+                storePassword = keystoreProperties["storePassword"]
+                keyAlias = keystoreProperties["keyAlias"]
+                keyPassword = keystoreProperties["keyPassword"]
+            }
+        }
+    }
+
+    defaultConfig {
+        applicationId = "com.next.smartrent"
+        minSdk = flutter.minSdkVersion
+        targetSdk = flutter.targetSdkVersion
+        versionCode = flutter.versionCode
+        versionName = flutter.versionName
+        manifestPlaceholders = [
+            'com.google.android.geo.API_KEY': project.hasProperty('MAPS_API_KEY') ? project.property('MAPS_API_KEY') : "AIzaSyDBtOCLLOaWvNjc5WPOQjBbHkSGSy3Y-9k",
+            'applicationName': project.hasProperty('APPLICATION_NAME') ? project.property('APPLICATION_NAME') : "android.app.Application"
+        ]
+    }
+
+    buildTypes {
+        release {
+            if (keystoreProperties["storeFile"] != null) {
+                signingConfig = signingConfigs.release
+            } else {
+                signingConfig = signingConfigs.debug
+            }
+            // Enable code shrinking and use the app-level ProGuard rules.
+            // `minifyEnabled` is required to run R8; if it's already enabled
+            // by another config, this keeps the behavior consistent and ensures
+            // our `proguard-rules.pro` is applied.
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    aaptOptions {
+        noCompress "tflite"  // Your model's file extension: "tflite", "lite", etc.
+    }
+}
+dependencies {}
+
+flutter {
+    source = "../.."
+}
+

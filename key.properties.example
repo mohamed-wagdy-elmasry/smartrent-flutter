@@ -1,0 +1,8 @@
+# Release Keystore Configuration Example
+# Copy this file to `key.properties` (or `android/key.properties`) and fill in your actual credentials.
+# NEVER commit `key.properties` or your `.jks` file to GitHub/version control.
+
+storeFile=smartrent-release.jks
+storePassword=YOUR_STORE_PASSWORD
+keyAlias=smartrent
+keyPassword=YOUR_KEY_PASSWORD

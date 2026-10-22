@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>$(DEVELOPMENT_LANGUAGE)</string>
+    <key>CFBundleDisplayName</key>
+    <string>Smart Rent</string>
+    <key>CFBundleExecutable</key>
+    <string>$(EXECUTABLE_NAME)</string>
+    <key>CFBundleIdentifier</key>
+    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>Smart Rent</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>$(FLUTTER_BUILD_NAME)</string>
+    <key>CFBundleSignature</key>
+    <string>????</string>
+    <key>CFBundleVersion</key>
+    <string>$(FLUTTER_BUILD_NUMBER)</string>
+    <key>LSRequiresIPhoneOS</key>
+    <true/>
+    <key>UILaunchStoryboardName</key>
+    <string>LaunchScreen</string>
+    <key>UIMainStoryboardFile</key>
+    <string>Main</string>
+
+    <!-- Orientations: Portrait only for iPhone (rental app), all for iPad -->
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+      <string>UIInterfaceOrientationPortrait</string>
+    </array>
+    <key>UISupportedInterfaceOrientations~ipad</key>
+    <array>
+      <string>UIInterfaceOrientationPortrait</string>
+      <string>UIInterfaceOrientationPortraitUpsideDown</string>
+      <string>UIInterfaceOrientationLandscapeLeft</string>
+      <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
+
+    <!-- Performance -->
+    <key>CADisableMinimumFrameDurationOnPhone</key>
+    <true/>
+    <key>UIApplicationSupportsIndirectInputEvents</key>
+    <true/>
+
+    <!-- ============================================================ -->
+    <!-- PERMISSION USAGE DESCRIPTIONS — Apple Guideline 5.1.1        -->
+    <!-- Every key below maps to an actual feature in the app.        -->
+    <!-- ============================================================ -->
+
+    <!-- Camera: profile photo capture & QR code scanning -->
+    <key>NSCameraUsageDescription</key>
+    <string>Smart Rent uses the camera to let you take a profile photo and scan QR codes when picking up or returning a vehicle.</string>
+
+    <!-- Photo Library read: upload profile photo / verification documents -->
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Smart Rent needs access to your photo library so you can upload a profile photo and attach identity documents for verification.</string>
+
+    <!-- Photo Library write: save downloaded receipts or vehicle images -->
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>Smart Rent would like to save rental receipts and vehicle images to your photo library.</string>
+
+    <!-- Microphone: video recording during identity verification -->
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Smart Rent uses the microphone when you record a short video as part of identity verification.</string>
+
+    <!-- Location (when in use): show nearby vehicles & delivery availability -->
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Smart Rent uses your location to show nearby available vehicles and check whether car delivery is available in your area.</string>
+
+    <!-- Location (always): NOT requested — removed to avoid Apple rejection.
+         Only NSLocationWhenInUseUsageDescription is needed. -->
+
+    <!-- Google Maps iOS SDK API key (read from Info.plist at runtime) -->
+    <key>GMSApiKey</key>
+    <string>AIzaSyDBtOCLLOaWvNjc5WPOQjBbHkSGSy3Y-9k</string>
+
+    <!-- Background Modes: remote-notification for Firebase Cloud Messaging -->
+    <key>UIBackgroundModes</key>
+    <array>
+      <string>remote-notification</string>
+    </array>
+
+    <!-- Firebase method swizzling — must be YES when using firebase_messaging -->
+    <key>FirebaseAppDelegateProxyEnabled</key>
+    <true/>
+
+    <!-- App Store Export Compliance: app uses standard HTTPS/TLS encryption only -->
+    <key>ITSAppUsesNonExemptEncryption</key>
+    <false/>
+
+  </dict>
+</plist>

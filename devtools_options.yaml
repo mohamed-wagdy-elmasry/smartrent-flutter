@@ -1,0 +1,16 @@
+# Enable hot reload without the extension (experimental)
+flutter_devtools:
+  hot_reload_without_extension: true
+
+  # Disable the "Dart DevTools" tab
+  show_dart_devtools: true
+
+  # Configure network throttling
+  network:
+    latency: 200
+    download_throughput: 500
+    upload_throughput: 100
+
+  # Enable experimental "Memory Timeline" feature (use with caution)
+  experimental_features:
+    memory_timeline: true

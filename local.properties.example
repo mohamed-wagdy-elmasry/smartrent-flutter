@@ -1,0 +1,8 @@
+# Example local.properties entries (DO NOT COMMIT real keys)
+# Add your Google Maps API key here. This file should be created as local.properties
+# at the project root and must NOT be committed to version control.
+
+# MAPS_API_KEY=YOUR_GOOGLE_MAPS_API_KEY_HERE
+
+# Optionally override the Android application name placeholder if needed
+# APPLICATION_NAME=android.app.Application
