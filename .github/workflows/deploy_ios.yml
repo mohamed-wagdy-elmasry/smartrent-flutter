@@ -1,0 +1,102 @@
+name: Deploy iOS to App Store
+
+on:
+  workflow_dispatch:
+    inputs:
+      submit_to_testflight:
+        description: 'Upload directly to TestFlight / App Store Connect'
+        required: true
+        type: boolean
+        default: true
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy iOS
+    runs-on: macos-14
+    timeout-minutes: 90
+
+    env:
+      BUNDLE_ID: "com.next.smartrent"
+      APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER }}
+      APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+
+    steps:
+      - name: 1. Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 2. Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 3. Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.32.8'
+          channel: 'stable'
+          cache: true
+
+      - name: 4. Install Codemagic CLI tools
+        run: |
+          python -m pip install --upgrade pip
+          pip3 install codemagic-cli-tools
+
+      - name: 5. Initialize macOS Keychain
+        run: |
+          keychain initialize
+
+      - name: 6. Fetch / Create Signing Files from Apple
+        run: |
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create
+
+      - name: 7. Add Certificates to Keychain
+        run: |
+          keychain add-certificates
+
+      - name: 8. Apply Provisioning Profiles to Xcode Project
+        run: |
+          xcode-project use-profiles
+
+      - name: 9. Install Flutter dependencies
+        run: |
+          flutter pub get
+
+      - name: 10. Install CocoaPods dependencies
+        run: |
+          cd ios
+          pod install --repo-update
+          cd ..
+
+      - name: 11. Run Flutter Analyze
+        run: |
+          flutter analyze --no-fatal-infos
+
+      - name: 12. Build Signed IPA for App Store
+        run: |
+          flutter build ipa \
+            --release \
+            --export-options-plist=ios/ExportOptions.plist
+
+      - name: 13. Save IPA as GitHub Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: smartrent-ios-ipa
+          path: build/ios/ipa/*.ipa
+          retention-days: 14
+
+      - name: 14. Upload to App Store Connect / TestFlight
+        if: ${{ github.event_name == 'push' || inputs.submit_to_testflight }}
+        uses: apple-actions/upload-testflight-build@v5
+        with:
+          app-path: 'build/ios/ipa/*.ipa'
+          issuer-id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          api-key-id: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER }}
+          api-private-key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+          uses-non-exempt-encryption: 'false'
+          wait-for-processing: false
