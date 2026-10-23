@@ -51,18 +51,8 @@ import UserNotifications
     print("APNs registration failed: \(error.localizedDescription)")
     super.application(application, didFailToRegisterForRemoteNotificationsWithError: error)
   }
-}
 
-// MARK: - MessagingDelegate (FCM token refresh)
-extension AppDelegate: MessagingDelegate {
-  func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
-    // FCM token refresh is observed by the firebase_messaging Flutter plugin.
-    print("FCM registration token refreshed")
-  }
-}
-
-// MARK: - UNUserNotificationCenterDelegate (foreground & background notification handling)
-extension AppDelegate: UNUserNotificationCenterDelegate {
+  // MARK: - UNUserNotificationCenterDelegate (foreground & background notification handling)
   /// Show notification banner even when app is in foreground.
   override func userNotificationCenter(
     _ center: UNUserNotificationCenter,
@@ -82,5 +72,13 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
     withCompletionHandler completionHandler: @escaping () -> Void
   ) {
     super.userNotificationCenter(center, didReceive: response, withCompletionHandler: completionHandler)
+  }
+}
+
+// MARK: - MessagingDelegate (FCM token refresh)
+extension AppDelegate: MessagingDelegate {
+  func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
+    // FCM token refresh is observed by the firebase_messaging Flutter plugin.
+    print("FCM registration token refreshed")
   }
 }
