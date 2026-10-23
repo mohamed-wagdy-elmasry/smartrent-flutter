@@ -73,8 +73,9 @@
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>Smart Rent uses your location to show nearby available vehicles and check whether car delivery is available in your area.</string>
 
-    <!-- Location (always): NOT requested — removed to avoid Apple rejection.
-         Only NSLocationWhenInUseUsageDescription is needed. -->
+    <!-- Location (always + when in use): required by Google Maps SDK — app only uses location when active -->
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>Smart Rent uses your location to show nearby available vehicles and check whether car delivery is available in your area.</string>
 
     <!-- Google Maps iOS SDK API key (read from Info.plist at runtime) -->
     <key>GMSApiKey</key>
