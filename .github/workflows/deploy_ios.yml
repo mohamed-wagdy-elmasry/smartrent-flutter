@@ -107,18 +107,28 @@ jobs:
             --build-number=$BUILD_NUM \
             --export-options-plist=ios/ExportOptions.plist
 
-      - name: 14. Save IPA as GitHub Artifact
+      - name: 14. Locate IPA File
+        run: |
+          IPA_FILE=$(find build/ios/ipa -name "*.ipa" | head -n 1)
+          if [ -z "$IPA_FILE" ]; then
+            echo "::error::No .ipa file found in build/ios/ipa"
+            exit 1
+          fi
+          echo "Found IPA: $IPA_FILE"
+          echo "IPA_PATH=$IPA_FILE" >> $GITHUB_ENV
+
+      - name: 15. Save IPA as GitHub Artifact
         uses: actions/upload-artifact@v4
         with:
           name: smartrent-ios-ipa
-          path: build/ios/ipa/*.ipa
+          path: ${{ env.IPA_PATH }}
           retention-days: 14
 
-      - name: 15. Upload to App Store Connect / TestFlight
+      - name: 16. Upload to App Store Connect / TestFlight
         if: ${{ github.event_name == 'push' || inputs.submit_to_testflight }}
         uses: apple-actions/upload-testflight-build@v5
         with:
-          app-path: 'build/ios/ipa/*.ipa'
+          app-path: ${{ env.IPA_PATH }}
           issuer-id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           api-key-id: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER }}
           api-private-key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
