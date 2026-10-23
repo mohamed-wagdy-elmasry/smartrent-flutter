@@ -60,25 +60,47 @@ jobs:
         run: |
           keychain add-certificates
 
-      - name: 8. Apply Provisioning Profiles to Xcode Project
+      - name: 8. Install Provisioning Profiles for Xcode
+        run: |
+          PROFILES_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$PROFILES_DIR"
+          for search_dir in "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles" "$HOME/Library/MobileDevice/Provisioning Profiles"; do
+            if [ -d "$search_dir" ]; then
+              for f in "$search_dir"/*.mobileprovision "$search_dir"/*.provisionprofile; do
+                if [ -f "$f" ]; then
+                  echo "Found profile: $f"
+                  UUID=$(/usr/libexec/PlistBuddy -c "Print :UUID" /dev/stdin <<< $(security cms -D -i "$f") 2>/dev/null || true)
+                  if [ -n "$UUID" ]; then
+                    echo "-> Installing as UUID: $PROFILES_DIR/$UUID.mobileprovision"
+                    cp -f "$f" "$PROFILES_DIR/$UUID.mobileprovision"
+                  fi
+                  cp -f "$f" "$PROFILES_DIR/" 2>/dev/null || true
+                fi
+              done
+            fi
+          done
+          echo "Installed profiles in $PROFILES_DIR:"
+          ls -la "$PROFILES_DIR"
+
+      - name: 9. Apply Provisioning Profiles to Xcode Project
         run: |
           xcode-project use-profiles --export-options-plist=ios/ExportOptions.plist
 
-      - name: 9. Install Flutter dependencies
+      - name: 10. Install Flutter dependencies
         run: |
           flutter pub get
 
-      - name: 10. Install CocoaPods dependencies
+      - name: 11. Install CocoaPods dependencies
         run: |
           cd ios
           pod install --repo-update
           cd ..
 
-      - name: 11. Run Flutter Analyze
+      - name: 12. Run Flutter Analyze
         run: |
           flutter analyze --no-fatal-infos || true
 
-      - name: 12. Build Signed IPA for App Store
+      - name: 13. Build Signed IPA for App Store
         run: |
           BUILD_NUM=$(( 10 + ${{ github.run_number }} ))
           flutter build ipa \
@@ -87,14 +109,14 @@ jobs:
             --build-number=$BUILD_NUM \
             --export-options-plist=ios/ExportOptions.plist
 
-      - name: 13. Save IPA as GitHub Artifact
+      - name: 14. Save IPA as GitHub Artifact
         uses: actions/upload-artifact@v4
         with:
           name: smartrent-ios-ipa
           path: build/ios/ipa/*.ipa
           retention-days: 14
 
-      - name: 14. Upload to App Store Connect / TestFlight
+      - name: 15. Upload to App Store Connect / TestFlight
         if: ${{ github.event_name == 'push' || inputs.submit_to_testflight }}
         uses: apple-actions/upload-testflight-build@v5
         with:
