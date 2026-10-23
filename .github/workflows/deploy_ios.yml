@@ -15,7 +15,7 @@ on:
 jobs:
   build-and-deploy:
     name: Build & Deploy iOS
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 90
 
     env:
@@ -106,10 +106,10 @@ jobs:
 
       - name: 13. Build Signed IPA for App Store
         run: |
-          BUILD_NUM=$(( 10 + ${{ github.run_number }} ))
+          BUILD_NUM=$(( 30 + ${{ github.run_number }} ))
           flutter build ipa \
             --release \
-            --build-name=1.2.0 \
+            --build-name=1.2.1 \
             --build-number=$BUILD_NUM \
             --export-options-plist=ios/ExportOptions.plist
 
