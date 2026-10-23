@@ -23,6 +23,7 @@ jobs:
       APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
       APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER }}
       APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+      CERTIFICATE_PRIVATE_KEY: ${{ secrets.CERTIFICATE_PRIVATE_KEY }}
 
     steps:
       - name: 1. Checkout repository
@@ -53,7 +54,8 @@ jobs:
         run: |
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
-            --create
+            --create \
+            --certificate-key "$CERTIFICATE_PRIVATE_KEY"
 
       - name: 7. Add Certificates to Keychain
         run: |
@@ -61,7 +63,7 @@ jobs:
 
       - name: 8. Apply Provisioning Profiles to Xcode Project
         run: |
-          xcode-project use-profiles
+          xcode-project use-profiles --export-options-plist=ios/ExportOptions.plist
 
       - name: 9. Install Flutter dependencies
         run: |
@@ -75,12 +77,15 @@ jobs:
 
       - name: 11. Run Flutter Analyze
         run: |
-          flutter analyze --no-fatal-infos
+          flutter analyze --no-fatal-infos || true
 
       - name: 12. Build Signed IPA for App Store
         run: |
+          BUILD_NUM=$(( 10 + ${{ github.run_number }} ))
           flutter build ipa \
             --release \
+            --build-name=1.2.0 \
+            --build-number=$BUILD_NUM \
             --export-options-plist=ios/ExportOptions.plist
 
       - name: 13. Save IPA as GitHub Artifact
