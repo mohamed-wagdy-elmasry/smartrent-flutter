@@ -64,23 +64,21 @@ jobs:
         run: |
           PROFILES_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
           mkdir -p "$PROFILES_DIR"
-          for search_dir in "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles" "$HOME/Library/MobileDevice/Provisioning Profiles"; do
-            if [ -d "$search_dir" ]; then
-              for f in "$search_dir"/*.mobileprovision "$search_dir"/*.provisionprofile; do
-                if [ -f "$f" ]; then
-                  echo "Found profile: $f"
-                  UUID=$(/usr/libexec/PlistBuddy -c "Print :UUID" /dev/stdin <<< $(security cms -D -i "$f") 2>/dev/null || true)
-                  if [ -n "$UUID" ]; then
-                    echo "-> Installing as UUID: $PROFILES_DIR/$UUID.mobileprovision"
-                    cp -f "$f" "$PROFILES_DIR/$UUID.mobileprovision"
-                  fi
-                  cp -f "$f" "$PROFILES_DIR/" 2>/dev/null || true
+          SRC_DIR="$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"
+          if [ -d "$SRC_DIR" ]; then
+            for f in "$SRC_DIR"/*.mobileprovision "$SRC_DIR"/*.provisionprofile; do
+              if [ -f "$f" ]; then
+                echo "Found profile: $f"
+                UUID=$(/usr/libexec/PlistBuddy -c "Print :UUID" /dev/stdin <<< $(security cms -D -i "$f") 2>/dev/null || true)
+                if [ -n "$UUID" ]; then
+                  echo "-> Installing as UUID: $PROFILES_DIR/$UUID.mobileprovision"
+                  cp -f "$f" "$PROFILES_DIR/$UUID.mobileprovision"
                 fi
-              done
-            fi
-          done
+              fi
+            done
+          fi
           echo "Installed profiles in $PROFILES_DIR:"
-          ls -la "$PROFILES_DIR"
+          ls -la "$PROFILES_DIR" || true
 
       - name: 9. Apply Provisioning Profiles to Xcode Project
         run: |
