@@ -36,7 +36,8 @@ class BookingMobileScreen extends GetView<BookingController> {
           Expanded(
             child: ListView(
               padding: const EdgeInsets.fromLTRB(_BS.md, _BS.md, _BS.md, _BS.md),
-              physics: const BouncingScrollPhysics(),
+              physics: const AlwaysScrollableScrollPhysics(),
+              cacheExtent: 500,
               children: [
                 BookingAllFields(),
               ],

@@ -11,12 +11,6 @@ class OthersWidgets extends StatelessWidget {
         Sizes.height.v20,
         if (isLoggedIn)
           _itemCard(
-            Icons.lock_open_outlined,
-            Strings.changePassword,
-            () => Get.toNamed(Routes.change_passwordScreen),
-          ),
-        if (isLoggedIn)
-          _itemCard(
             Icons.notifications_none,
             Strings.notification,
             () => Get.toNamed(Routes.notificationScreen),

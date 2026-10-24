@@ -11,9 +11,6 @@ class ProductDetailsMobileScreen extends GetView<ProductDetailsController> {
       appBar: CustomAppBar(
         '',
         backgroundColor: Colors.transparent,
-        action: [
-          IconButton(onPressed: () {}, icon: Icon(Icons.bookmarks_outlined)),
-        ],
       ),
       body: _bodyWidget(context),
     );
@@ -28,7 +25,6 @@ class ProductDetailsMobileScreen extends GetView<ProductDetailsController> {
           BookNow(),
           CarInfo(),
           Range(),
-          DetailReview(),
         ],
       ),
     );

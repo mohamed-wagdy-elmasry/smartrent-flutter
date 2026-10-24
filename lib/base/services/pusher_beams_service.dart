@@ -17,13 +17,21 @@ class PusherBeamsService {
   
   // Your Pusher Beams instance ID
   static const String instanceId = 'e2aaf506-f2b9-43fe-81b6-0d26c5fe5596';
+
+  // iOS bundle identifier required for APNs device registration
+  static const String bundleIdentifier = 'com.next.smartrent';
   
   // Pusher Beams API endpoints
   static const String _baseUrl = 'https://$instanceId.pushnotifications.pusher.com';
+
+  /// Device platform string used by Pusher Beams Device API ('apns' on iOS, 'fcm' on Android)
+  String get _platform => Platform.isIOS ? 'apns' : 'fcm';
   
   FirebaseMessaging? _messaging;
   String? _deviceId;
   String? _fcmToken;
+  String? _apnsToken;
+  String? _pendingUserId;
   String? _beamsAuthToken;
   bool _isInitialized = false;
   Set<String> _localInterests = {};
@@ -83,6 +91,7 @@ class PusherBeamsService {
   Future<void> initialize({String? userId}) async {
     try {
       _logger.i('🚀 Starting Pusher Beams initialization...');
+      _pendingUserId = userId;
       
       if (_isInitialized) {
         _logger.i('ℹ️ Pusher Beams already initialized');
@@ -125,12 +134,38 @@ class PusherBeamsService {
         return;
       }
 
-      // Get FCM token
-      _fcmToken = await _messaging!.getToken();
-      if (_fcmToken != null) {
-        _logger.i('FCM Token obtained');
-        await _registerDevice(_fcmToken!);
-        
+      // Obtain platform-specific token
+      String? token;
+      if (Platform.isIOS) {
+        _logger.i('🍎 iOS detected: Waiting for APNs token...');
+        for (int i = 0; i < 10; i++) {
+          token = await _messaging!.getAPNSToken();
+          if (token != null && token.isNotEmpty) {
+            _apnsToken = token;
+            _logger.i('✅ APNs token obtained on attempt ${i + 1}: $token');
+            break;
+          }
+          _logger.i('⏳ APNs token is null, retrying in 1s (${i + 1}/10)...');
+          await Future.delayed(const Duration(seconds: 1));
+        }
+
+        if (token == null || token.isEmpty) {
+          _logger.w('⚠️ APNs token is still null after 10 retries on iOS. Will retry on token refresh or when app is re-opened.');
+        }
+      } else {
+        _logger.i('🤖 Android detected: Fetching FCM token...');
+        token = await _messaging!.getToken();
+        if (token != null && token.isNotEmpty) {
+          _fcmToken = token;
+          _logger.i('✅ FCM Token obtained');
+        } else {
+          _logger.w('⚠️ FCM token is null on Android');
+        }
+      }
+
+      if (token != null && token.isNotEmpty) {
+        await _registerDevice(token);
+
         // Set user ID for authenticated notifications if provided
         if (userId != null && _deviceId != null) {
           await setUserId(userId);
@@ -138,10 +173,27 @@ class PusherBeamsService {
       }
 
       // Listen to token refresh
-      _messaging!.onTokenRefresh.listen((newToken) {
+      _messaging!.onTokenRefresh.listen((newToken) async {
+        _logger.i('Token refreshed: $newToken');
         _fcmToken = newToken;
-        _logger.i('FCM Token refreshed');
-        _registerDevice(newToken);
+        if (Platform.isIOS) {
+          final apns = await _messaging!.getAPNSToken();
+          if (apns != null && apns.isNotEmpty) {
+            _apnsToken = apns;
+            _logger.i('🍎 APNs Token obtained during refresh: $apns');
+            await _registerDevice(apns);
+            if (_pendingUserId != null && _deviceId != null) {
+              await setUserId(_pendingUserId!);
+            }
+          } else {
+            _logger.w('⚠️ APNs token still null during onTokenRefresh');
+          }
+        } else {
+          await _registerDevice(newToken);
+          if (_pendingUserId != null && _deviceId != null) {
+            await setUserId(_pendingUserId!);
+          }
+        }
       });
 
       // Handle foreground messages
@@ -172,27 +224,33 @@ class PusherBeamsService {
   }
 
   /// Register device with Pusher Beams using authenticated user ID
-  Future<void> _registerDevice(String fcmToken) async {
+  Future<void> _registerDevice(String deviceToken) async {
     try {
       if (_beamsAuthToken == null || _beamsAuthToken!.isEmpty) {
         _logger.e('❌ Cannot register device: Beams auth token is missing');
         return;
       }
 
-      final platform = Platform.isAndroid ? 'FCM' : 'APNS';
+      final platform = _platform;
       
-      _logger.i('📱 Registering device with Pusher Beams (authenticated)...');
+      _logger.i('📱 Registering device with Pusher Beams ($platform, authenticated)...');
       
+      final Map<String, dynamic> requestBody = {
+        'token': deviceToken,
+      };
+
+      if (Platform.isIOS) {
+        requestBody['bundleIdentifier'] = bundleIdentifier;
+      }
+
       // Register device with authentication token
       final response = await http.post(
-        Uri.parse('$_baseUrl/device_api/v1/instances/$instanceId/devices/${platform.toLowerCase()}'),
+        Uri.parse('$_baseUrl/device_api/v1/instances/$instanceId/devices/$platform'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $_beamsAuthToken', // Use Beams auth token
         },
-        body: json.encode({
-          'token': fcmToken,
-        }),
+        body: json.encode(requestBody),
       );
 
       _logger.i('📊 Device registration response: ${response.statusCode}');
@@ -201,6 +259,11 @@ class PusherBeamsService {
         final data = json.decode(response.body);
         _deviceId = data['id'];
         _logger.i('✅ Device registered with Pusher Beams. Device ID: $_deviceId');
+
+        // Sync any local interests that were waiting for registration
+        if (_localInterests.isNotEmpty) {
+          await setDeviceInterests(_localInterests.toList());
+        }
       } else {
         _logger.e('❌ Failed to register device: ${response.statusCode} - ${response.body}');
       }
@@ -213,6 +276,8 @@ class PusherBeamsService {
   /// This associates the device with a specific user using the Beams auth token
   Future<void> setUserId(String userId) async {
     try {
+      _pendingUserId = userId;
+
       if (_beamsAuthToken == null || _beamsAuthToken!.isEmpty) {
         _logger.e('❌ Cannot set user ID: Beams auth token is missing');
         return;
@@ -223,10 +288,10 @@ class PusherBeamsService {
         return;
       }
 
-      final platform = Platform.isAndroid ? 'fcm' : 'apns';
+      final platform = _platform;
       final beamsUserId = 'user-$userId'; // IMPORTANT: must match backend user ID format
       
-      _logger.i('👤 Setting Pusher Beams user ID: $beamsUserId');
+      _logger.i('👤 Setting Pusher Beams user ID: $beamsUserId ($platform)');
 
       // Set user ID with authentication
       final response = await http.put(
@@ -268,13 +333,13 @@ class PusherBeamsService {
       }
       
       final response = await http.post(
-        Uri.parse('$_baseUrl/device_api/v1/instances/$instanceId/devices/fcm/$_deviceId/interests/$interest'),
+        Uri.parse('$_baseUrl/device_api/v1/instances/$instanceId/devices/$_platform/$_deviceId/interests/$interest'),
         headers: {
           'Content-Type': 'application/json',
         },
       );
 
-      if (response.statusCode == 204) {
+      if (response.statusCode == 204 || response.statusCode == 200) {
         _localInterests.add(interest);
         _logger.i('Added device interest: $interest');
       } else {
@@ -294,13 +359,13 @@ class PusherBeamsService {
       }
       
       final response = await http.delete(
-        Uri.parse('$_baseUrl/device_api/v1/instances/$instanceId/devices/fcm/$_deviceId/interests/$interest'),
+        Uri.parse('$_baseUrl/device_api/v1/instances/$instanceId/devices/$_platform/$_deviceId/interests/$interest'),
         headers: {
           'Content-Type': 'application/json',
         },
       );
 
-      if (response.statusCode == 204) {
+      if (response.statusCode == 204 || response.statusCode == 200) {
         _localInterests.remove(interest);
         _logger.i('Removed device interest: $interest');
       } else {
@@ -322,7 +387,7 @@ class PusherBeamsService {
       }
       
       final response = await http.put(
-        Uri.parse('$_baseUrl/device_api/v1/instances/$instanceId/devices/fcm/$_deviceId/interests'),
+        Uri.parse('$_baseUrl/device_api/v1/instances/$instanceId/devices/$_platform/$_deviceId/interests'),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -331,7 +396,7 @@ class PusherBeamsService {
         }),
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 204) {
         _localInterests = interests.toSet();
         _logger.i('Set device interests: $interests');
       } else {
@@ -351,7 +416,7 @@ class PusherBeamsService {
       }
       
       final response = await http.get(
-        Uri.parse('$_baseUrl/device_api/v1/instances/$instanceId/devices/fcm/$_deviceId/interests'),
+        Uri.parse('$_baseUrl/device_api/v1/instances/$instanceId/devices/$_platform/$_deviceId/interests'),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -383,8 +448,14 @@ class PusherBeamsService {
     }
   }
 
-  /// Get FCM token
+  /// Get FCM token (Android or iOS fallback)
   String? getFcmToken() => _fcmToken;
+
+  /// Get APNs token (iOS)
+  String? getApnsToken() => _apnsToken;
+
+  /// Get active device token (APNs on iOS, FCM on Android)
+  String? getDeviceToken() => Platform.isIOS ? _apnsToken : _fcmToken;
 
   /// Get device ID
   String? getDeviceId() => _deviceId;
@@ -410,15 +481,37 @@ class PusherBeamsService {
     return await _messaging?.getInitialMessage();
   }
 
+  /// Clear user association from Pusher Beams
+  Future<void> clearUser() async {
+    if (_deviceId == null || _beamsAuthToken == null || _beamsAuthToken!.isEmpty) {
+      return;
+    }
+    try {
+      final response = await http.delete(
+        Uri.parse('$_baseUrl/device_api/v1/instances/$instanceId/devices/$_platform/$_deviceId/user'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_beamsAuthToken',
+        },
+      );
+      _logger.i('Clear user response: ${response.statusCode}');
+    } catch (e) {
+      _logger.w('Failed to clear user from Pusher Beams: $e');
+    }
+  }
+
   /// Stop and clear all state
   Future<void> clearAllState() async {
     try {
       await clearDeviceInterests();
+      await clearUser();
       if (_messaging != null) {
         await _messaging!.deleteToken();
       }
       _deviceId = null;
       _fcmToken = null;
+      _apnsToken = null;
+      _pendingUserId = null;
       _isInitialized = false;
       _localInterests.clear();
       _logger.i('Cleared all Pusher Beams state');

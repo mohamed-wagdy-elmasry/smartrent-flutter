@@ -53,29 +53,17 @@
     <!-- Every key below maps to an actual feature in the app.        -->
     <!-- ============================================================ -->
 
-    <!-- Camera: profile photo capture & QR code scanning -->
+    <!-- Camera: profile photo & KYC identity documents -->
     <key>NSCameraUsageDescription</key>
-    <string>Smart Rent uses the camera to let you take a profile photo and scan QR codes when picking up or returning a vehicle.</string>
+    <string>نستخدم الكاميرا لالتقاط صورة ملفك الشخصي وتصوير الهوية ورخصة القيادة لتوثيق حسابك.</string>
 
-    <!-- Photo Library read: upload profile photo / verification documents -->
+    <!-- Photo Library read: upload profile photo & identity documents -->
     <key>NSPhotoLibraryUsageDescription</key>
-    <string>Smart Rent needs access to your photo library so you can upload a profile photo and attach identity documents for verification.</string>
+    <string>نستخدم الصور لرفع صورة ملفك الشخصي ووثائق التحقق (الهوية ورخصة القيادة).</string>
 
-    <!-- Photo Library write: save downloaded receipts or vehicle images -->
-    <key>NSPhotoLibraryAddUsageDescription</key>
-    <string>Smart Rent would like to save rental receipts and vehicle images to your photo library.</string>
-
-    <!-- Microphone: video recording during identity verification -->
-    <key>NSMicrophoneUsageDescription</key>
-    <string>Smart Rent uses the microphone when you record a short video as part of identity verification.</string>
-
-    <!-- Location (when in use): show nearby vehicles & delivery availability -->
+    <!-- Location (when in use only): nearby vehicles, branch pickup & delivery check -->
     <key>NSLocationWhenInUseUsageDescription</key>
-    <string>Smart Rent uses your location to show nearby available vehicles and check whether car delivery is available in your area.</string>
-
-    <!-- Location (always + when in use): required by Google Maps SDK — app only uses location when active -->
-    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-    <string>Smart Rent uses your location to show nearby available vehicles and check whether car delivery is available in your area.</string>
+    <string>نستخدم موقعك لعرض أقرب السيارات والفروع إليك، وللتحقق من توفر خدمة التوصيل وحساب رسومها.</string>
 
     <!-- Google Maps iOS SDK API key (read from Info.plist at runtime) -->
     <key>GMSApiKey</key>
@@ -94,6 +82,15 @@
     <!-- App Store Export Compliance: app uses standard HTTPS/TLS encryption only -->
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
+
+    <!-- Schemes queried by url_launcher (tel, mailto, https, http) -->
+    <key>LSApplicationQueriesSchemes</key>
+    <array>
+      <string>tel</string>
+      <string>mailto</string>
+      <string>https</string>
+      <string>http</string>
+    </array>
 
   </dict>
 </plist>

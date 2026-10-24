@@ -86,12 +86,14 @@ class BookingAllFields extends GetView<BookingController> {
                   child: Icon(icon, color: iconColor, size: 20),
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF0D1B2A),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF0D1B2A),
+                    ),
                   ),
                 ),
               ],
@@ -521,12 +523,14 @@ class BookingAllFields extends GetView<BookingController> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  DynamicLanguage.key(Strings.appLSelectInsurance),
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF0D1B2A),
+                Expanded(
+                  child: Text(
+                    DynamicLanguage.key(Strings.appLSelectInsurance),
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF0D1B2A),
+                    ),
                   ),
                 ),
               ],
@@ -657,15 +661,17 @@ class BookingAllFields extends GetView<BookingController> {
               const Icon(
                 Icons.warning_amber_rounded,
                 color: Color(0xFFE65100),
-                size: 18,
+                size: 20,
               ),
               const SizedBox(width: 8),
-              Text(
-                DynamicLanguage.key(Strings.appLInsuranceWarning),
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF7B4000),
+              Expanded(
+                child: Text(
+                  DynamicLanguage.key(Strings.appLExcessLiabilityInsurance),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFFE65100),
+                  ),
                 ),
               ),
             ],
@@ -750,12 +756,14 @@ class BookingAllFields extends GetView<BookingController> {
                     child: const Icon(Icons.receipt_long_rounded, color: Colors.white, size: 20),
                   ),
                   const SizedBox(width: 12),
-                  Text(
-                    DynamicLanguage.key(Strings.totalRent),
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                  Expanded(
+                    child: Text(
+                      DynamicLanguage.key(Strings.totalRent),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ],
@@ -839,16 +847,19 @@ class BookingAllFields extends GetView<BookingController> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: isTotal ? 15 : 13,
-            fontWeight: isTotal ? FontWeight.w700 : FontWeight.w400,
-            color: isWhite
-                ? (isSubtle ? Colors.white.withOpacity(0.75) : Colors.white)
-                : (isSubtle ? const Color(0xFF6B7A8D) : const Color(0xFF0D1B2A)),
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: isTotal ? 15 : 13,
+              fontWeight: isTotal ? FontWeight.w700 : FontWeight.w400,
+              color: isWhite
+                  ? (isSubtle ? Colors.white.withOpacity(0.75) : Colors.white)
+                  : (isSubtle ? const Color(0xFF6B7A8D) : const Color(0xFF0D1B2A)),
+            ),
           ),
         ),
+        const SizedBox(width: 8),
         Text(
           value,
           style: TextStyle(
@@ -899,12 +910,14 @@ class BookingAllFields extends GetView<BookingController> {
                     child: const Icon(Icons.info_outline_rounded, color: Color(0xFF0B5FA5), size: 20),
                   ),
                   const SizedBox(width: 12),
-                  Text(
-                    DynamicLanguage.key(Strings.kmAllowanceLabel),
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF0D1B2A),
+                  Expanded(
+                    child: Text(
+                      DynamicLanguage.key(Strings.kmAllowanceLabel),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF0D1B2A),
+                      ),
                     ),
                   ),
                 ],

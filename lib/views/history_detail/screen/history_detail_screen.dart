@@ -952,7 +952,11 @@ class _BranchCard extends StatelessWidget {
   Future<void> _launch(String uri) async {
     try {
       final u = Uri.parse(uri);
-      if (await canLaunchUrl(u)) await launchUrl(u, mode: LaunchMode.externalApplication);
+      if (await canLaunchUrl(u)) {
+        await launchUrl(u, mode: LaunchMode.externalApplication);
+      } else {
+        await launchUrl(u, mode: LaunchMode.externalApplication);
+      }
     } catch (_) {}
   }
 

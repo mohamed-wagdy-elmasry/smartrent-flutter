@@ -4,6 +4,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_html/flutter_html.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../base/utils/basic_import.dart';
 
@@ -45,6 +46,18 @@ class _HtmlScreenState extends State<HtmlScreen> {
     }
   }
 
+  Future<void> _launchExternalUrl(Uri uri) async {
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+    } catch (e) {
+      debugPrint('Could not launch $uri: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -62,16 +75,54 @@ class _HtmlScreenState extends State<HtmlScreen> {
           if (_content!.contains('<svg')) {
             return InAppWebView(
               initialData: InAppWebViewInitialData(data: _content!),
-              initialOptions: InAppWebViewGroupOptions(
-                crossPlatform: InAppWebViewOptions(javaScriptEnabled: true),
+              initialSettings: InAppWebViewSettings(
+                javaScriptEnabled: true,
+                useShouldOverrideUrlLoading: true,
+                transparentBackground: true,
+                supportZoom: false,
               ),
+              shouldOverrideUrlLoading: (controller, navigationAction) async {
+                final url = navigationAction.request.url;
+                if (url != null) {
+                  final scheme = url.scheme.toLowerCase();
+                  if (scheme == 'data' || scheme == 'about') {
+                    return NavigationActionPolicy.ALLOW;
+                  }
+                  final uri = Uri.tryParse(url.toString());
+                  if (uri != null) {
+                    await _launchExternalUrl(uri);
+                  }
+                  return NavigationActionPolicy.CANCEL;
+                }
+                return NavigationActionPolicy.ALLOW;
+              },
+              onCreateWindow: (controller, createWindowAction) async {
+                final url = createWindowAction.request.url;
+                if (url != null) {
+                  final uri = Uri.tryParse(url.toString());
+                  if (uri != null) {
+                    await _launchExternalUrl(uri);
+                  }
+                }
+                return false;
+              },
             );
           }
 
           return SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.all(12.0),
-              child: Html(data: _content!),
+              child: Html(
+                data: _content!,
+                onLinkTap: (url, attributes, element) {
+                  if (url != null && url.isNotEmpty) {
+                    final uri = Uri.tryParse(url);
+                    if (uri != null) {
+                      _launchExternalUrl(uri);
+                    }
+                  }
+                },
+              ),
             ),
           );
         },
