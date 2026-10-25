@@ -107,9 +107,13 @@ jobs:
       - name: 13. Build Signed IPA for App Store
         run: |
           BUILD_NUM=$(( 30 + ${{ github.run_number }} ))
+          if [ $BUILD_NUM -le 42 ]; then
+            BUILD_NUM=43
+          fi
+          echo "Building iOS with version 1.2.1 (Build: $BUILD_NUM)"
           flutter build ipa \
             --release \
-            --build-name=1.2.2 \
+            --build-name=1.2.1 \
             --build-number=$BUILD_NUM \
             --export-options-plist=ios/ExportOptions.plist
 
