@@ -65,6 +65,10 @@
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>نستخدم موقعك لعرض أقرب السيارات والفروع إليك، وللتحقق من توفر خدمة التوصيل وحساب رسومها.</string>
 
+    <!-- Location (always & when in use): required by Google Maps SDK CoreLocation references -->
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>نستخدم موقعك لعرض أقرب السيارات والفروع إليك، وللتحقق من توفر خدمة التوصيل وحساب رسومها.</string>
+
     <!-- Google Maps iOS SDK API key (read from Info.plist at runtime) -->
     <key>GMSApiKey</key>
     <string>AIzaSyDBtOCLLOaWvNjc5WPOQjBbHkSGSy3Y-9k</string>

@@ -2,5 +2,6 @@
 "CFBundleDisplayName" = "سمارت رنت";
 "CFBundleName" = "سمارت رنت";
 "NSLocationWhenInUseUsageDescription" = "نستخدم موقعك لعرض أقرب السيارات والفروع إليك، وللتحقق من توفر خدمة التوصيل وحساب رسومها.";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "نستخدم موقعك لعرض أقرب السيارات والفروع إليك، وللتحقق من توفر خدمة التوصيل وحساب رسومها.";
 "NSCameraUsageDescription" = "نستخدم الكاميرا لالتقاط صورة ملفك الشخصي وتصوير الهوية ورخصة القيادة لتوثيق حسابك.";
 "NSPhotoLibraryUsageDescription" = "نستخدم الصور لرفع صورة ملفك الشخصي ووثائق التحقق (الهوية ورخصة القيادة).";

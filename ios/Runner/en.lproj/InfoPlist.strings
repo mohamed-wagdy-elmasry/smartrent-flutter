@@ -2,5 +2,6 @@
 "CFBundleDisplayName" = "Smart Rent";
 "CFBundleName" = "Smart Rent";
 "NSLocationWhenInUseUsageDescription" = "We use your location to show the nearest cars and branches to you, verify delivery availability, and calculate delivery fees.";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "We use your location to show the nearest cars and branches to you, verify delivery availability, and calculate delivery fees.";
 "NSCameraUsageDescription" = "We use the camera to take your profile picture and capture your national ID and driving license for identity verification.";
 "NSPhotoLibraryUsageDescription" = "We use photos to upload your profile picture and verification documents (national ID and driving license).";
