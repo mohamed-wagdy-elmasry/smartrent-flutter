@@ -111,7 +111,7 @@ class NotificationService {
       // Set up notification listeners
       _setupListeners();
     } catch (e) {
-      debugPrint('NotificationService init error (handled): $e');
+      log.e('NotificationService init error (handled): $e');
     }
   }
 
