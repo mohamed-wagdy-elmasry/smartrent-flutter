@@ -53,62 +53,66 @@ class NotificationService {
 
 
   static Future<void> init() async {
-    await AwesomeNotifications().initialize(
-      null, // default icon (uses app icon)
-      [
-        NotificationChannel(
-        channelKey: CarNotificationChannel.bookingAlerts.key,
-        channelName: CarNotificationChannel.bookingAlerts.displayName,
-        channelDescription: 'Critical booking & payment notifications',
-        importance: NotificationImportance.Max,
-        playSound: true,
-        enableVibration: true,
-        criticalAlerts: true,
-      ),
+    try {
+      await AwesomeNotifications().initialize(
+        null, // default icon (uses app icon)
+        [
+          NotificationChannel(
+            channelKey: CarNotificationChannel.bookingAlerts.key,
+            channelName: CarNotificationChannel.bookingAlerts.displayName,
+            channelDescription: 'Critical booking & payment notifications',
+            importance: NotificationImportance.High,
+            playSound: true,
+            enableVibration: true,
+            criticalAlerts: false,
+          ),
 
-      NotificationChannel(
-        channelKey: CarNotificationChannel.tripUpdates.key,
-        channelName: CarNotificationChannel.tripUpdates.displayName,
-        channelDescription: 'Pickup, drop-off & live trip updates',
-        importance: NotificationImportance.High,
-        playSound: true,
-        enableVibration: true,
-      ),
+          NotificationChannel(
+            channelKey: CarNotificationChannel.tripUpdates.key,
+            channelName: CarNotificationChannel.tripUpdates.displayName,
+            channelDescription: 'Pickup, drop-off & live trip updates',
+            importance: NotificationImportance.High,
+            playSound: true,
+            enableVibration: true,
+          ),
 
-      NotificationChannel(
-        channelKey: CarNotificationChannel.supportMessages.key,
-        channelName: CarNotificationChannel.supportMessages.displayName,
-        channelDescription: 'Customer support chat updates',
-        importance: NotificationImportance.High,
-        playSound: true,
-        enableVibration: true,
-      ),
+          NotificationChannel(
+            channelKey: CarNotificationChannel.supportMessages.key,
+            channelName: CarNotificationChannel.supportMessages.displayName,
+            channelDescription: 'Customer support chat updates',
+            importance: NotificationImportance.High,
+            playSound: true,
+            enableVibration: true,
+          ),
 
-      NotificationChannel(
-        channelKey: CarNotificationChannel.generalUpdates.key,
-        channelName: CarNotificationChannel.generalUpdates.displayName,
-        channelDescription: 'Promotions & app updates',
-        importance: NotificationImportance.Default,
-        playSound: true,
-      ),
+          NotificationChannel(
+            channelKey: CarNotificationChannel.generalUpdates.key,
+            channelName: CarNotificationChannel.generalUpdates.displayName,
+            channelDescription: 'Promotions & app updates',
+            importance: NotificationImportance.Default,
+            playSound: true,
+          ),
 
-      NotificationChannel(
-        channelKey: CarNotificationChannel.systemLogs.key,
-        channelName: CarNotificationChannel.systemLogs.displayName,
-        channelDescription: 'Background verification & sync logs',
-        importance: NotificationImportance.Low,
-        playSound: false,
-        enableVibration: false,
-      ),
-      ],
-      debug: false,
-    );
+          NotificationChannel(
+            channelKey: CarNotificationChannel.systemLogs.key,
+            channelName: CarNotificationChannel.systemLogs.displayName,
+            channelDescription: 'Background verification & sync logs',
+            importance: NotificationImportance.Low,
+            playSound: false,
+            enableVibration: false,
+          ),
+        ],
+        debug: false,
+      );
 
-    // Request notification permissions
-    await requestPermission();
+      // Request notification permissions
+      await requestPermission();
 
-    // Set up notification listeners
-    _setupListeners();
+      // Set up notification listeners
+      _setupListeners();
+    } catch (e) {
+      debugPrint('NotificationService init error (handled): $e');
+    }
   }
 
   static Future<bool> requestPermission() async {

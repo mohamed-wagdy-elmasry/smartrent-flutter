@@ -12,14 +12,18 @@ class AppInitializer {
     await GetStorage.init();
     await ScreenUtil.ensureScreenSize();
     
-    // Initialize local notifications
-    await NotificationService.init();
-    
-    // Register notification tap handler (fallback for unhandled types)
-    NotificationService.setNotificationTapHandler((payload) async {
-      // Navigate to notification screen when user taps on notification
-      Get.toNamed(Routes.notificationScreen);
-    });
+    // Initialize local notifications safely
+    try {
+      await NotificationService.init();
+      
+      // Register notification tap handler (fallback for unhandled types)
+      NotificationService.setNotificationTapHandler((payload) async {
+        // Navigate to notification screen when user taps on notification
+        Get.toNamed(Routes.notificationScreen);
+      });
+    } catch (e) {
+      debugPrint('AppInitializer: NotificationService error (handled): $e');
+    }
     
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,

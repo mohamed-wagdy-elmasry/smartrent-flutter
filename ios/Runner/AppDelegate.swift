@@ -13,25 +13,29 @@ import UserNotifications
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
 
-    // 1. Configure Firebase FIRST (before any other Firebase call)
-    FirebaseApp.configure()
+    // 1. Configure Firebase safely (check for GoogleService-Info.plist first)
+    if FirebaseApp.app() == nil {
+      if let filePath = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist"),
+         let options = FirebaseOptions(contentsOfFile: filePath) {
+        FirebaseApp.configure(options: options)
+      } else {
+        print("Warning: GoogleService-Info.plist not found in bundle, skipping native FirebaseApp.configure()")
+      }
+    }
 
-    // 2. Provide Google Maps API key (read from Info.plist at runtime)
+    // 2. Set UNUserNotificationCenter delegate so foreground notifications work
+    UNUserNotificationCenter.current().delegate = self
+
+    // 3. Set Firebase Messaging delegate for APNs token ↔ FCM token mapping
+    Messaging.messaging().delegate = self
+
+    // 4. Provide Google Maps API key (read from Info.plist at runtime)
     if let gmsKey = Bundle.main.object(forInfoDictionaryKey: "GMSApiKey") as? String,
        !gmsKey.isEmpty {
       GMSServices.provideAPIKey(gmsKey)
     }
 
-    // 3. Set Firebase Messaging delegate for APNs token ↔ FCM token mapping
-    Messaging.messaging().delegate = self
-
-    // 4. Register Flutter plugins
-    //    NOTE: With UIScene lifecycle (iOS 26+ / Xcode 26), FlutterAppDelegate
-    //    delegates window/engine creation to FlutterSceneDelegate.
-    //    GeneratedPluginRegistrant.register(with: self) still works here because
-    //    FlutterAppDelegate conforms to both UIApplicationDelegate and the
-    //    FlutterPluginRegistry protocol. Plugin channels are wired to the engine
-    //    automatically when the scene initialises.
+    // 5. Register Flutter plugins
     GeneratedPluginRegistrant.register(with: self)
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)

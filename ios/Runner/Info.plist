@@ -29,30 +29,6 @@
     <key>UIMainStoryboardFile</key>
     <string>Main</string>
 
-    <!-- UIScene lifecycle — required by iOS 26 SDK (Xcode 26). Without this
-         the app crashes immediately on launch with a missing scene manifest error. -->
-    <key>UIApplicationSceneManifest</key>
-    <dict>
-      <key>UIApplicationSupportsMultipleScenes</key>
-      <false/>
-      <key>UISceneConfigurations</key>
-      <dict>
-        <key>UIWindowSceneSessionRoleApplication</key>
-        <array>
-          <dict>
-            <key>UISceneClassName</key>
-            <string>UIWindowScene</string>
-            <key>UISceneConfigurationName</key>
-            <string>flutter</string>
-            <key>UISceneDelegateClassName</key>
-            <string>FlutterSceneDelegate</string>
-            <key>UISceneStoryboardFile</key>
-            <string>Main</string>
-          </dict>
-        </array>
-      </dict>
-    </dict>
-
     <!-- Orientations: Portrait only for iPhone (rental app), all for iPad -->
     <key>UISupportedInterfaceOrientations</key>
     <array>
