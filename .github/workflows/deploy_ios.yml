@@ -20,6 +20,7 @@ jobs:
 
     env:
       BUNDLE_ID: "com.next.smartrent"
+      FIREBASE_APP_ID: "1:919921057810:ios:5dd127148df9f3429c38cb"
       APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
       APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER }}
       APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
@@ -107,15 +108,17 @@ jobs:
       - name: 13. Build Signed IPA for App Store
         run: |
           BUILD_NUM=$(( 30 + ${{ github.run_number }} ))
-          if [ $BUILD_NUM -le 45 ]; then
-            BUILD_NUM=46
+          if [ $BUILD_NUM -le 47 ]; then
+            BUILD_NUM=47
           fi
           echo "Building iOS with version 1.2.1 (Build: $BUILD_NUM)"
           flutter build ipa \
             --release \
             --build-name=1.2.1 \
             --build-number=$BUILD_NUM \
+            --split-debug-info=build/ios/symbols \
             --export-options-plist=ios/ExportOptions.plist
+          echo "BUILD_NUM=$BUILD_NUM" >> $GITHUB_ENV
 
       - name: 14. Locate IPA File
         run: |
@@ -144,3 +147,16 @@ jobs:
           api-private-key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
           uses-non-exempt-encryption: 'false'
           wait-for-processing: false
+
+      - name: 17. Upload Crashlytics dSYM symbols
+        if: ${{ github.event_name == 'push' || inputs.submit_to_testflight }}
+        run: |
+          # Upload split-debug-info symbols so Crashlytics can de-obfuscate stack traces
+          # This lets you read crash reports from the Firebase console on Windows
+          find build/ios/symbols -name "*.symbols" | while read f; do
+            echo "Uploading: $f"
+            flutter pub run firebase_crashlytics:upload_symbols \
+              --app-id="$FIREBASE_APP_ID" \
+              "$f" || true
+          done
+          echo "Crashlytics symbol upload complete"

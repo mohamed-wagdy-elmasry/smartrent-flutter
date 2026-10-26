@@ -3,7 +3,7 @@ description: carbo
 
 publish_to: "none"
 
-version: 1.2.1+46
+version: 1.2.1+47
 
 environment:
   sdk: ">=3.8.1 <4.4.0"
@@ -64,7 +64,10 @@ dependencies:
   firebase_messaging: ^15.1.6
 
   # Local notifications
-  awesome_notifications: ^0.10.1
+  awesome_notifications: ^0.12.1
+
+  # Crash reporting — lets you see stack traces from Windows via Firebase console
+  firebase_crashlytics: ^4.3.3
 
   # Flutter DevTools / MCP widget inspection
   mcp_toolkit: ^0.4.0

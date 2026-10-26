@@ -16,27 +16,28 @@ import UserNotifications
     // 1. Configure Firebase FIRST (before any other Firebase call)
     FirebaseApp.configure()
 
-    // 2. Set UNUserNotificationCenter delegate so foreground notifications work
-    UNUserNotificationCenter.current().delegate = self
-
-    // 3. Set Firebase Messaging delegate for APNs token ↔ FCM token mapping
-    Messaging.messaging().delegate = self
-
-    // 4. Provide Google Maps API key (read from Info.plist at runtime)
+    // 2. Provide Google Maps API key (read from Info.plist at runtime)
     if let gmsKey = Bundle.main.object(forInfoDictionaryKey: "GMSApiKey") as? String,
        !gmsKey.isEmpty {
       GMSServices.provideAPIKey(gmsKey)
     }
 
-    // 5. Register Flutter plugins (must be last)
+    // 3. Set Firebase Messaging delegate for APNs token ↔ FCM token mapping
+    Messaging.messaging().delegate = self
+
+    // 4. Register Flutter plugins
+    //    NOTE: With UIScene lifecycle (iOS 26+ / Xcode 26), FlutterAppDelegate
+    //    delegates window/engine creation to FlutterSceneDelegate.
+    //    GeneratedPluginRegistrant.register(with: self) still works here because
+    //    FlutterAppDelegate conforms to both UIApplicationDelegate and the
+    //    FlutterPluginRegistry protocol. Plugin channels are wired to the engine
+    //    automatically when the scene initialises.
     GeneratedPluginRegistrant.register(with: self)
+
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
   // MARK: - APNs Registration
-  // With FirebaseAppDelegateProxyEnabled = YES in Info.plist, Firebase swizzles
-  // didRegisterForRemoteNotificationsWithDeviceToken to automatically map the APNs
-  // token to FCM. We forward directly to super so FlutterAppDelegate dispatches to all plugins.
   override func application(
     _ application: UIApplication,
     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
@@ -52,8 +53,7 @@ import UserNotifications
     super.application(application, didFailToRegisterForRemoteNotificationsWithError: error)
   }
 
-  // MARK: - UNUserNotificationCenterDelegate (foreground & background notification handling)
-  /// Show notification banner even when app is in foreground.
+  // MARK: - UNUserNotificationCenterDelegate (foreground & background)
   override func userNotificationCenter(
     _ center: UNUserNotificationCenter,
     willPresent notification: UNNotification,
@@ -63,9 +63,6 @@ import UserNotifications
     completionHandler([.banner, .badge, .sound])
   }
 
-  /// Handle tap on notification (background / terminated state).
-  /// Forward to FlutterAppDelegate so firebase_messaging and flutter_local_notifications
-  /// can trigger onMessageOpenedApp and getInitialMessage() for deep navigation.
   override func userNotificationCenter(
     _ center: UNUserNotificationCenter,
     didReceive response: UNNotificationResponse,
@@ -78,7 +75,6 @@ import UserNotifications
 // MARK: - MessagingDelegate (FCM token refresh)
 extension AppDelegate: MessagingDelegate {
   func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
-    // FCM token refresh is observed by the firebase_messaging Flutter plugin.
     print("FCM registration token refreshed")
   }
 }

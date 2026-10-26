@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:carbo/views/dashboard/controller/dashboard_controller.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -38,6 +39,22 @@ void main() {
           options: DefaultFirebaseOptions.currentPlatform,
         );
 
+        // Wire Flutter framework errors → Crashlytics (release builds only)
+        if (!kDebugMode) {
+          FlutterError.onError =
+              FirebaseCrashlytics.instance.recordFlutterFatalError;
+
+          // Catch async platform errors not caught by Flutter framework
+          PlatformDispatcher.instance.onError = (error, stack) {
+            FirebaseCrashlytics.instance.recordError(
+              error,
+              stack,
+              fatal: true,
+            );
+            return true;
+          };
+        }
+
         // Note: PusherBeamsService.initialize() is called AFTER user login
         // in the splash controller or login screen, not here at startup
       } catch (e) {
@@ -63,6 +80,9 @@ void main() {
     (error, stack) {
       if (kDebugMode) {
         MCPToolkitBinding.instance.handleZoneError(error, stack);
+      } else {
+        // Report zone errors to Crashlytics in release builds
+        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
       }
     },
   );
