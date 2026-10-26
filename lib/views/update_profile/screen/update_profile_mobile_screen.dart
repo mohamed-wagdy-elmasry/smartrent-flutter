@@ -600,10 +600,10 @@ class UpdateProfileMobileScreen extends GetView<UpdateProfileController> {
                 width: double.infinity,
                 child: imagePath.isNotEmpty
                     ? Image.file(File(imagePath), fit: BoxFit.cover)
-                    : Image.network(
-                        imageUrl,
+                    : AppCachedImage(
+                        imageUrl: imageUrl,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Center(
+                        errorWidget: Center(
                           child: Icon(Icons.broken_image_rounded,
                               size: 40, color: _C.textTertiary),
                         ),

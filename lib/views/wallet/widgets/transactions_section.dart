@@ -67,21 +67,21 @@ class TransactionsSection extends StatelessWidget {
       return _buildEmptyState(context);
     }
 
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: controller.transactions.length + (controller.hasMore.value ? 1 : 0),
-      separatorBuilder: (context, index) => SizedBox(height: 12.h),
-      itemBuilder: (context, index) {
+    final hasMore = controller.hasMore.value;
+    final count = controller.transactions.length + (hasMore ? 1 : 0);
+    return Column(
+      children: List.generate(count, (index) {
         if (index == controller.transactions.length) {
           return _buildLoadMoreButton();
         }
-        
-        return _TransactionCard(
-          transaction: controller.transactions[index],
-          index: index,
+        return Padding(
+          padding: EdgeInsets.only(bottom: 12.h),
+          child: _TransactionCard(
+            transaction: controller.transactions[index],
+            index: index,
+          ),
         );
-      },
+      }),
     );
   }
 
@@ -158,19 +158,7 @@ class _TransactionCard extends StatelessWidget {
     
     final color = _getTransactionColor();
 
-    return TweenAnimationBuilder<double>(
-      duration: Duration(milliseconds: 300 + (index * 50)),
-      tween: Tween(begin: 0.0, end: 1.0),
-      curve: Curves.easeOutCubic,
-      builder: (context, value, child) {
-        return Transform.translate(
-          offset: Offset(0, 20 * (1 - value)),
-          child: Opacity(
-            opacity: value,
-            child: child,
-          ),
-        );
-      },
+    return RepaintBoundary(
       child: Container(
         padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(

@@ -36,7 +36,16 @@ class WalletController extends GetxController with GetSingleTickerProviderStateM
     shimmerController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
-    )..repeat();
+    );
+    ever(isLoadingBalance, (bool loading) {
+      if (loading) {
+        if (!shimmerController.isAnimating) {
+          shimmerController.repeat();
+        }
+      } else {
+        shimmerController.stop();
+      }
+    });
     refresh();
   }
 

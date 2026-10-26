@@ -92,21 +92,23 @@ class _PulseDotState extends State<_PulseDot>
       );
     }
 
-    return AnimatedBuilder(
-      animation: _anim,
-      builder: (_, __) => Container(
-        width: 7,
-        height: 7,
-        decoration: BoxDecoration(
-          color: widget.color,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: widget.color.withOpacity(0.5 * _anim.value),
-              blurRadius: 6 * _anim.value,
-              spreadRadius: 2 * _anim.value,
-            ),
-          ],
+    return RepaintBoundary(
+      child: AnimatedBuilder(
+        animation: _anim,
+        builder: (_, __) => Container(
+          width: 7,
+          height: 7,
+          decoration: BoxDecoration(
+            color: widget.color,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: widget.color.withOpacity(0.5 * _anim.value),
+                blurRadius: 4 * _anim.value,
+                spreadRadius: 1 * _anim.value,
+              ),
+            ],
+          ),
         ),
       ),
     );

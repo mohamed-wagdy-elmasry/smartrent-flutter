@@ -12,7 +12,8 @@ import 'package:carbo/base/services/delivery_service.dart';
 
 final log = logger(AllVendorsDashboardController);
 
-class AllVendorsDashboardController extends GetxController {
+class AllVendorsDashboardController extends GetxController
+    with WidgetsBindingObserver {
   // Scroll controller for infinite scroll
   final scrollController = ScrollController();
 
@@ -71,6 +72,7 @@ class AllVendorsDashboardController extends GetxController {
   final deliveryFeeMap = <int, double>{}.obs; // branchId -> deliveryFee
   RxBool isCheckingDelivery = false.obs;
   RxBool locationPermissionDenied = false.obs;
+  RxBool isLocationServiceEnabled = true.obs;
 
   // Resolved GPS position for the current session (null = no location / denied)
   Position? _userPosition;
@@ -78,6 +80,7 @@ class AllVendorsDashboardController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    WidgetsBinding.instance.addObserver(this);
     log.i('AllVendorsDashboardController initialized');
     log.i('Current language: ${DynamicLanguage.selectedLanguage.value}');
     log.i('App language is loading: ${DynamicLanguage.isLoading}');
@@ -86,22 +89,56 @@ class AllVendorsDashboardController extends GetxController {
     WidgetsBinding.instance.addPostFrameCallback((_) => _initLocationAndFetch());
   }
 
+  bool _isRecheckingFromResume = false;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      if (_isRecheckingFromResume) return;
+      if (locationPermissionDenied.value || !isLocationServiceEnabled.value) {
+        _isRecheckingFromResume = true;
+        Future.delayed(const Duration(milliseconds: 600), () async {
+          try {
+            await retryDeliveryCheck();
+          } finally {
+            _isRecheckingFromResume = false;
+          }
+        });
+      }
+    }
+  }
+
   Future<void> _initLocationAndFetch() async {
+    // 1. Fetch cars immediately without blocking the UI on GPS!
+    searchAllVendorsCars();
+
+    // 2. Resolve location in background in parallel without competing with initial UI render
+    Future.delayed(const Duration(milliseconds: 800), () {
+      if (!isClosed) {
+        _initLocationInBackground();
+      }
+    });
+  }
+
+  Future<void> _initLocationInBackground() async {
     try {
-      final permission = await Geolocator.checkPermission();
-      if (permission != LocationPermission.deniedForever) {
-        final locationService = Get.find<LocationService>();
+      final locationService = Get.find<LocationService>();
+      await locationService.checkLocationServiceStatus();
+      locationPermissionDenied.value =
+          locationService.locationPermissionDenied.value;
+      isLocationServiceEnabled.value =
+          locationService.isLocationServiceEnabled.value;
+
+      if (locationService.hasLocationPermission.value &&
+          locationService.isLocationServiceEnabled.value) {
         _userPosition = await locationService.getUserLocation();
-      } else {
-        _userPosition = null;
+        if (_userPosition != null && vendorCars.isNotEmpty) {
+          _checkDeliveryForCars();
+        }
       }
     } catch (e) {
-      log.e('Location init error: $e');
-      _userPosition = null;
+      log.w('Background location fetch: $e');
     }
-
-    if (isClosed) return;
-    await searchAllVendorsCars();
   }
 
   void _onScroll() {
@@ -115,6 +152,7 @@ class AllVendorsDashboardController extends GetxController {
 
   @override
   void onClose() {
+    WidgetsBinding.instance.removeObserver(this);
     scrollController.removeListener(_onScroll);
     scrollController.dispose();
     super.onClose();
@@ -247,21 +285,37 @@ class AllVendorsDashboardController extends GetxController {
 
   // Check delivery availability for loaded cars
   Future<void> _checkDeliveryForCars() async {
+    if (isCheckingDelivery.value) return;
+
     try {
       isCheckingDelivery.value = true;
-      locationPermissionDenied.value = false;
 
       // Get user location
       final locationService = Get.find<LocationService>();
+      await locationService.checkLocationServiceStatus();
+      locationPermissionDenied.value =
+          locationService.locationPermissionDenied.value;
+      isLocationServiceEnabled.value =
+          locationService.isLocationServiceEnabled.value;
+
+      if (!locationService.isLocationServiceEnabled.value ||
+          locationService.locationPermissionDenied.value) {
+        log.w('Cannot check delivery: GPS disabled or permission denied');
+        return;
+      }
+
       final position = await locationService.getUserLocation();
 
       if (position == null) {
-        // Location permission denied or unavailable
-        locationPermissionDenied.value = locationService.locationPermissionDenied.value;
+        locationPermissionDenied.value =
+            locationService.locationPermissionDenied.value;
+        isLocationServiceEnabled.value =
+            locationService.isLocationServiceEnabled.value;
         log.w('Cannot check delivery: location unavailable');
-        isCheckingDelivery.value = false;
         return;
       }
+      locationPermissionDenied.value = false;
+      isLocationServiceEnabled.value = true;
 
       log.i('User current location - Lat: ${position.latitude}, Lng: ${position.longitude}');
 
@@ -288,15 +342,17 @@ class AllVendorsDashboardController extends GetxController {
           userLng: position.longitude,
         );
 
-        // Update delivery availability & fee maps
-        deliveryAvailabilityMap.clear();
-        deliveryFeeMap.clear();
+        // Batch update delivery availability & fee maps to trigger single reactive update
+        final newAvailability = <int, bool>{};
+        final newFees = <int, double>{};
         results.forEach((branchId, response) {
-          deliveryAvailabilityMap[branchId] = response.isAvailable;
+          newAvailability[branchId] = response.isAvailable;
           if (response.isAvailable && response.deliveryFee != null && response.deliveryFee! > 0) {
-            deliveryFeeMap[branchId] = response.deliveryFee!;
+            newFees[branchId] = response.deliveryFee!;
           }
         });
+        deliveryAvailabilityMap.assignAll(newAvailability);
+        deliveryFeeMap.assignAll(newFees);
 
         log.i('Delivery check complete: ${deliveryAvailabilityMap.length} branches checked');
       }
@@ -325,6 +381,10 @@ class AllVendorsDashboardController extends GetxController {
 
   // Manually trigger delivery check (when user enables location)
   Future<void> retryDeliveryCheck() async {
+    final locationService = Get.find<LocationService>();
+    await locationService.checkLocationServiceStatus();
+    locationPermissionDenied.value = locationService.locationPermissionDenied.value;
+    isLocationServiceEnabled.value = locationService.isLocationServiceEnabled.value;
     await _checkDeliveryForCars();
   }
 

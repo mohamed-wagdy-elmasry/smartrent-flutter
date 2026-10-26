@@ -45,16 +45,14 @@ class NotificationMobileScreen extends GetView<NotificationController> {
     }
 
     return SafeArea(
-      child: ListView(
+      child: ListView.builder(
         padding: EdgeInsets.only(
           left: Dimensions.defaultHorizontalSize * 0.8,
           right: Dimensions.defaultHorizontalSize * 0.8,
           top: Dimensions.verticalSize * 0.5,
         ),
-        children: List.generate(
-          controller.notificationModel!.data.notification.length,
-          (index) => LogoWidget(index),
-        ),
+        itemCount: controller.notificationModel!.data.notification.length,
+        itemBuilder: (context, index) => LogoWidget(index),
       ),
     );
   }

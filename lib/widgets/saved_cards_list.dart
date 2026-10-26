@@ -43,12 +43,8 @@ class _SavedCardsListState extends State<SavedCardsList> {
       );
     }
     
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: _cards.length,
-      itemBuilder: (context, index) {
-        final card = _cards[index];
+    return Column(
+      children: _cards.map((card) {
         return ListTile(
           leading: _getCardIcon(card.cardBrand),
           title: Text(card.displayName),
@@ -58,7 +54,7 @@ class _SavedCardsListState extends State<SavedCardsList> {
               : null,
           onTap: () => widget.onCardSelected(card),
         );
-      },
+      }).toList(),
     );
   }
   

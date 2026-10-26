@@ -83,10 +83,10 @@ class TopAppBarWidget extends GetView<DashboardController> {
   _buildFallbackImage(String url) {
     if (url.isNotEmpty &&
         (url.startsWith('http://') || url.startsWith('https://'))) {
-      return Image.network(
-        url,
+      return AppCachedImage(
+        imageUrl: url,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => Container(),
+        errorWidget: Container(),
       );
     } else {
       return Container();

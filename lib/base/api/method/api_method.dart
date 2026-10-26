@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import '../../../routes/routes.dart';
 import '../../maintenance/maintenance_dialog.dart';
 import '../../maintenance/maintenance_model.dart';
@@ -120,8 +121,15 @@ class ApiMethod {
           'URL: $url\n'
           'Response: ${response.body}',
         );
-        CustomSnackBar.error(Strings.serverError);
-        Get.offAllNamed(Routes.otpLoginScreen);
+        String errorMsg = Strings.serverError;
+        try {
+          final errJson = jsonDecode(response.body);
+          if (errJson['message']?['error'] is List && (errJson['message']['error'] as List).isNotEmpty) {
+            errorMsg = errJson['message']['error'].first.toString();
+          }
+        } catch (_) {}
+        CustomSnackBar.error(errorMsg);
+        return null;
       }
       if (response.statusCode == 401) {
         log.e(
@@ -306,8 +314,15 @@ class ApiMethod {
           'URL: $url\n'
           'Response: ${response.body}',
         );
-        CustomSnackBar.error(Strings.serverError);
-        Get.offAllNamed(Routes.otpLoginScreen);
+        String errorMsg = Strings.serverError;
+        try {
+          final errJson = jsonDecode(response.body);
+          if (errJson['message']?['error'] is List && (errJson['message']['error'] as List).isNotEmpty) {
+            errorMsg = errJson['message']['error'].first.toString();
+          }
+        } catch (_) {}
+        CustomSnackBar.error(errorMsg);
+        return null;
       }
       if (response.statusCode == 401) {
         log.e(
@@ -440,10 +455,23 @@ class ApiMethod {
         '|📍📍📍|-----------------[[ Multipart ]] method details end ------------|📍📍📍|',
       );
 
+      final ext = filepath.split('.').last.toLowerCase();
+      final mimeType = (ext == 'png')
+          ? 'image/png'
+          : (ext == 'webp')
+              ? 'image/webp'
+              : 'image/jpeg';
+      final filename = '${filedName}_${DateTime.now().millisecondsSinceEpoch}.$ext';
+
       final request = http.MultipartRequest('POST', Uri.parse(url))
         ..fields.addAll(body)
         ..headers.addAll(isBasic ? basicHeaderInfo() : await bearerHeaderInfo())
-        ..files.add(await http.MultipartFile.fromPath(filedName, filepath));
+        ..files.add(await http.MultipartFile.fromPath(
+          filedName,
+          filepath,
+          filename: filename,
+          contentType: MediaType.parse(mimeType),
+        ));
       var response = await request.send();
       var jsonData = await http.Response.fromStream(response);
 
@@ -582,8 +610,22 @@ class ApiMethod {
         ..headers.addAll(multipartHeaders);
 
       for (int i = 0; i < fieldList.length; i++) {
+        final filePath = pathList[i];
+        final ext = filePath.split('.').last.toLowerCase();
+        final mimeType = (ext == 'png')
+            ? 'image/png'
+            : (ext == 'webp')
+                ? 'image/webp'
+                : 'image/jpeg';
+        final filename = '${fieldList[i]}_${DateTime.now().millisecondsSinceEpoch}.$ext';
+
         request.files.add(
-          await http.MultipartFile.fromPath(fieldList[i], pathList[i]),
+          await http.MultipartFile.fromPath(
+            fieldList[i],
+            filePath,
+            filename: filename,
+            contentType: MediaType.parse(mimeType),
+          ),
         );
       }
 
@@ -603,8 +645,15 @@ class ApiMethod {
           'URL: $url\n'
           'Response: ${jsonData.body}',
         );
-        CustomSnackBar.error(Strings.serverError);
-        Get.offAllNamed(Routes.otpLoginScreen);
+        String errorMsg = Strings.serverError;
+        try {
+          final errJson = jsonDecode(jsonData.body);
+          if (errJson['message']?['error'] is List && (errJson['message']['error'] as List).isNotEmpty) {
+            errorMsg = errJson['message']['error'].first.toString();
+          }
+        } catch (_) {}
+        CustomSnackBar.error(errorMsg);
+        return null;
       }
       if (response.statusCode == 401) {
         log.e(

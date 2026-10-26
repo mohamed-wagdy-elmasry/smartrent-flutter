@@ -19,13 +19,8 @@ class HistoryCard extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-          BoxShadow(
-            color: statusColor.withOpacity(0.08),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -77,6 +72,8 @@ class HistoryCard extends StatelessWidget {
                                         imageUrl: info.cars.image!,
                                         width: 64,
                                         height: 64,
+                                        memCacheWidth: 128,
+                                        memCacheHeight: 128,
                                         fit: BoxFit.cover,
                                         placeholder: (_, __) => Center(
                                           child: Icon(

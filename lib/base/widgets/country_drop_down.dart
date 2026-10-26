@@ -216,6 +216,7 @@ class _CountryDropDownState<T> extends State<CountryDropDown<T>>
       child: ListView.builder(
         padding: EdgeInsets.zero,
         shrinkWrap: true,
+        itemExtent: 44.0,
         itemCount: filteredItems.length,
         itemBuilder: (context, index) {
           final value = filteredItems[index];

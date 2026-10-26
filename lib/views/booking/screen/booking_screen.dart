@@ -10,6 +10,7 @@ import '../../../base/widgets/custom_time_picker.dart';
 import '../../../base/services/delivery_service.dart';
 import '../controller/booking_controller.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../../../base/widgets/app_cached_image.dart';
 import '../widget/location_picker_widget.dart';
 part 'booking_tablet_screen.dart';
 part 'booking_mobile_screen.dart';

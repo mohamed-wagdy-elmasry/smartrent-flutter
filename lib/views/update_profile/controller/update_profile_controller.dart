@@ -7,6 +7,7 @@ import '../../../base/api/method/request_process.dart';
 import '../../../base/api/model/common_success_model.dart';
 import '../../../base/utils/local_storage.dart';
 import '../../auth/register/controller/register_controller.dart';
+import '../../dashboard/controller/dashboard_controller.dart';
 import '../model/profile_info_model.dart';
 
 class UpdateProfileController extends GetxController {
@@ -189,7 +190,16 @@ class UpdateProfileController extends GetxController {
         if (value == null) return;
         _commonSuccessModel = value;
         LocalStorage.save(number: mobileController.text);
+        imagePath.value = '';
+        isImagePathSet.value = false;
+        nationalIdPath.value = '';
+        isNationalIdPathSet.value = false;
+        drivingLicensePath.value = '';
+        isDrivingLicensePathSet.value = false;
         getProfileInfo();
+        if (Get.isRegistered<DashboardController>()) {
+          Get.find<DashboardController>().getDashboardInfo();
+        }
       },
     );
   }

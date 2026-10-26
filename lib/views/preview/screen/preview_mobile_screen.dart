@@ -60,17 +60,28 @@ class PreviewMobileScreen extends GetView<PreviewController> {
   @override
   Widget build(BuildContext context) {
     final bookCtrl = Get.find<BookingController>();
-    return Scaffold(
-      backgroundColor: _C.bg,
-      body: Obx(
-        () => controller.isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : _buildScrollBody(context, bookCtrl),
-      ),
-      bottomNavigationBar: Obx(
-        () => controller.isLoading
-            ? const SizedBox.shrink()
-            : _BottomBar(controller: controller, bookCtrl: bookCtrl, p: _p, cur: _cur),
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        } else {
+          Get.back();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: _C.bg,
+        body: Obx(
+          () => controller.isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _buildScrollBody(context, bookCtrl),
+        ),
+        bottomNavigationBar: Obx(
+          () => controller.isLoading
+              ? const SizedBox.shrink()
+              : _BottomBar(controller: controller, bookCtrl: bookCtrl, p: _p, cur: _cur),
+        ),
       ),
     );
   }
@@ -79,7 +90,7 @@ class PreviewMobileScreen extends GetView<PreviewController> {
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
-        _buildHeroAppBar(bookCtrl),
+        _buildHeroAppBar(context, bookCtrl),
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(_S.md, _S.md, _S.md, 120),
@@ -101,7 +112,7 @@ class PreviewMobileScreen extends GetView<PreviewController> {
     );
   }
 
-  SliverAppBar _buildHeroAppBar(BookingController bookCtrl) {
+  SliverAppBar _buildHeroAppBar(BuildContext context, BookingController bookCtrl) {
     final car = bookCtrl.selectedCar.value;
     final heroUrl = car?.modelImage?.trim() ??
         (car?.images.isNotEmpty == true ? car!.images.first.url : '');
@@ -111,18 +122,32 @@ class PreviewMobileScreen extends GetView<PreviewController> {
       pinned: true,
       stretch: false,
       backgroundColor: _C.primary,
-      leading: IconButton(
-        onPressed: () => Get.back(),
-        icon: Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.20),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color: Colors.white,
-            size: 16,
+      leading: Center(
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(20),
+            onTap: () {
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop();
+              } else {
+                Get.back();
+              }
+            },
+            child: Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.40),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white.withOpacity(0.5), width: 1.2),
+              ),
+              child: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: Colors.white,
+                size: 18,
+              ),
+            ),
           ),
         ),
       ),

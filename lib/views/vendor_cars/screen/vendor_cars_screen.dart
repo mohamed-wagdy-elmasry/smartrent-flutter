@@ -438,7 +438,7 @@ class VendorCarsScreen extends GetView<VendorCarsController> {
             TextButton(
               onPressed: () async {
                 final locationService = Get.find<LocationService>();
-                await locationService.openAppSettings();
+                await locationService.requestAndEnableLocation(context: context);
                 await controller.retryDeliveryCheck();
               },
               style: TextButton.styleFrom(

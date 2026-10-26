@@ -97,12 +97,19 @@ class AppCachedImage extends StatelessWidget {
       return _buildErrorWidget(context);
     }
 
-    // Compute memory cache dimensions for optimal memory usage
-    final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
-    final computedMemCacheWidth = memCacheWidth ?? 
-        (width != null && width!.isFinite ? (width! * devicePixelRatio).round() : null);
-    final computedMemCacheHeight = memCacheHeight ?? 
-        (height != null && height!.isFinite ? (height! * devicePixelRatio).round() : null);
+    // Compute memory cache dimensions for optimal memory usage and to prevent decoding massive full-size bitmaps
+    final mediaQuery = MediaQuery.of(context);
+    final devicePixelRatio = mediaQuery.devicePixelRatio;
+    final screenPixelWidth = (mediaQuery.size.width * devicePixelRatio).round().clamp(200, 1080);
+
+    final computedMemCacheWidth = memCacheWidth ??
+        (width != null && width!.isFinite
+            ? (width! * devicePixelRatio).round().clamp(40, 1080)
+            : screenPixelWidth);
+    final computedMemCacheHeight = memCacheHeight ??
+        (height != null && height!.isFinite
+            ? (height! * devicePixelRatio).round().clamp(40, 1080)
+            : null);
 
     return CachedNetworkImage(
       imageUrl: normalizedUrl,

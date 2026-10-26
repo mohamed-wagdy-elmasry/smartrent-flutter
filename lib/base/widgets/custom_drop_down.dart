@@ -228,6 +228,7 @@ class _CustomDropDownState<T> extends State<CustomDropDown<T>>
       child: ListView.builder(
         padding: EdgeInsets.zero,
         shrinkWrap: true,
+        itemExtent: 44.0,
         itemCount: filteredItems.length,
         itemBuilder: (context, index) {
           final value = filteredItems[index];

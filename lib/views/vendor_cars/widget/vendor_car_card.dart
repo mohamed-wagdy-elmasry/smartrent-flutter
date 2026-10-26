@@ -15,9 +15,7 @@ class VendorCarCard extends GetView<VendorCarsController> {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedScale(
-      scale: 1.0,
-      duration: const Duration(milliseconds: 200),
+    return RepaintBoundary(
       child: Container(
         margin: EdgeInsets.symmetric(
           horizontal: Dimensions.defaultHorizontalSize,
@@ -29,13 +27,8 @@ class VendorCarCard extends GetView<VendorCarsController> {
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.04),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
-            BoxShadow(
-              color: Colors.black.withOpacity(0.02),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
@@ -78,23 +71,6 @@ class VendorCarCard extends GetView<VendorCarsController> {
             ),
             useShimmer: true,
             fadeIn: true,
-          ),
-
-          // Gradient overlay
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topRight,
-                  end: Alignment.bottomLeft,
-                  colors: [
-                    Colors.black.withOpacity(0.15),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.5],
-                ),
-              ),
-            ),
           ),
 
           // Availability badge

@@ -202,12 +202,12 @@ class BookingMobileScreen extends GetView<BookingController> {
     return ClipRRect(
       borderRadius: BorderRadius.circular(14),
       child: imgUrl != null && imgUrl.isNotEmpty
-          ? Image.network(
-              imgUrl,
+          ? AppCachedImage(
+              imageUrl: imgUrl,
               width: 80,
               height: 64,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => _carPlaceholder(),
+              errorWidget: _carPlaceholder(),
             )
           : _carPlaceholder(),
     );

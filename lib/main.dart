@@ -111,6 +111,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         darkTheme: Themes.dark,
         getPages: Routes.list,
         themeMode: ThemeMode.light,
+        defaultTransition: Transition.cupertino,
+        transitionDuration: const Duration(milliseconds: 250),
         localizationsDelegates: const [
           AppLocalizations.delegate,
           GlobalMaterialLocalizations.delegate,

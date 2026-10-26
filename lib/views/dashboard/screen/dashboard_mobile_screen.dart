@@ -25,11 +25,7 @@ class DashboardMobileScreen extends GetView<DashboardController> {
       child: Scaffold(
         backgroundColor: _DashboardColors.surface,
         drawer: DrawerMobileScreen(),
-        body: Obx(
-          () => controller.isLoading
-              ? const Center(child: Loader())
-              : _body(context),
-        ),
+        body: _body(context),
       ),
     );
   }

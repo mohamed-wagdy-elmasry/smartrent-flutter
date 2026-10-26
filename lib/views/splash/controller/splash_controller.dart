@@ -26,7 +26,7 @@ class SplashController extends GetxController {
     }
 
     navigatorPlug.startListening(
-      seconds: 3,
+      seconds: 1,
       onChanged: () {
         _checkUserAndNavigate();
       },

@@ -191,18 +191,8 @@ class _HistoryListViewState extends State<_HistoryListView> {
               }
               if (index >= list.length) return const SizedBox.shrink();
 
-              return TweenAnimationBuilder<double>(
+              return RepaintBoundary(
                 key: ValueKey(list[index].id),
-                tween: Tween(begin: 0.0, end: 1.0),
-                duration: Duration(milliseconds: 350 + (index % 5) * 60),
-                curve: Curves.easeOutCubic,
-                builder: (_, value, child) => Opacity(
-                  opacity: value,
-                  child: Transform.translate(
-                    offset: Offset(0, 20 * (1 - value)),
-                    child: child,
-                  ),
-                ),
                 child: HistoryCard(list[index]),
               );
             },

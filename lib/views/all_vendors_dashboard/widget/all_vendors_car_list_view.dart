@@ -72,7 +72,8 @@ class AllVendorsCarListView extends GetView<AllVendorsDashboardController> {
 
 
               // Location banner
-              if (controller.locationPermissionDenied.value)
+              if (controller.locationPermissionDenied.value ||
+                  !controller.isLocationServiceEnabled.value)
                 SliverToBoxAdapter(child: _buildLocationBanner(context)),
 
               // Car cards
@@ -88,13 +89,18 @@ class AllVendorsCarListView extends GetView<AllVendorsDashboardController> {
                         return _buildLoadMore();
                       }
                       final car = controller.vendorCars[index];
-                      return _PremiumCarCard(
-                        car: car,
-                        onTap: () => _onCarTap(car),
+                      return RepaintBoundary(
+                        key: ValueKey(car.id),
+                        child: _PremiumCarCard(
+                          car: car,
+                          onTap: () => _onCarTap(car),
+                        ),
                       );
                     },
                     childCount: controller.vendorCars.length +
                         (controller.hasMore.value ? 1 : 0),
+                    addAutomaticKeepAlives: false,
+                    addRepaintBoundaries: true,
                   ),
                 ),
               ),
@@ -183,7 +189,7 @@ class AllVendorsCarListView extends GetView<AllVendorsDashboardController> {
                   ),
 
                   // ── Greeting — fills remaining expanded space, fades on scroll ──
-                  if (isLoggedIn)
+                  if (isLoggedIn && t > 0.05)
                     Expanded(
                       child: ClipRect(
                         child: Opacity(
@@ -237,13 +243,8 @@ class AllVendorsCarListView extends GetView<AllVendorsDashboardController> {
                                         ),
                                       ),
                                       // Car count badge
-                                      Obx(() {
-                                        final count =
-                                            controller.vendorCars.length;
-                                        if (count == 0) {
-                                          return const SizedBox.shrink();
-                                        }
-                                        return Container(
+                                      if (controller.vendorCars.isNotEmpty)
+                                        Container(
                                           padding: const EdgeInsets.symmetric(
                                               horizontal: 10, vertical: 4),
                                           decoration: BoxDecoration(
@@ -257,15 +258,14 @@ class AllVendorsCarListView extends GetView<AllVendorsDashboardController> {
                                             ),
                                           ),
                                           child: Text(
-                                            '$count ${DynamicLanguage.key(Strings.carsAvailable)}',
+                                            '${controller.vendorCars.length} ${DynamicLanguage.key(Strings.carsAvailable)}',
                                             style: const TextStyle(
                                               fontSize: 12,
                                               fontWeight: FontWeight.w600,
                                               color: Colors.white,
                                             ),
                                           ),
-                                        );
-                                      }),
+                                        ),
                                     ],
                                   );
                                 }),
@@ -324,12 +324,13 @@ class AllVendorsCarListView extends GetView<AllVendorsDashboardController> {
   Widget _fallbackAvatar(String url) {
     if (url.isNotEmpty &&
         (url.startsWith('http://') || url.startsWith('https://'))) {
-      return Image.network(
-        url,
+      return AppCachedImage(
+        imageUrl: url,
         fit: BoxFit.cover,
         width: 40,
         height: 40,
-        errorBuilder: (_, __, ___) => const Icon(
+        shape: BoxShape.circle,
+        errorWidget: const Icon(
           Icons.person_rounded,
           color: Colors.white70,
           size: 22,
@@ -530,6 +531,26 @@ class AllVendorsCarListView extends GetView<AllVendorsDashboardController> {
 
   // ─────────────────────────── Location Banner ──────────────
   Widget _buildLocationBanner(BuildContext context) {
+    final isAr = DynamicLanguage.selectedLanguage.value.startsWith('ar');
+    final isGpsOff = !controller.isLocationServiceEnabled.value &&
+        !controller.locationPermissionDenied.value;
+
+    final title = isGpsOff
+        ? (isAr ? 'خدمة الموقع (GPS) غير مفعلة' : 'Location (GPS) Disabled')
+        : (isAr ? 'إذن الموقع مطلوب' : 'Location Access Needed');
+
+    final subtitle = isGpsOff
+        ? (isAr
+            ? 'يرجى تشغيل الموقع في الهاتف لعرض خيارات التوصيل'
+            : 'Enable GPS on your phone to see delivery options')
+        : (isAr
+            ? 'يرجى السماح بالوصول للموقع لعرض خيارات التوصيل'
+            : 'Enable to see delivery options');
+
+    final buttonText = isGpsOff
+        ? (isAr ? 'تشغيل' : 'Enable')
+        : (isAr ? 'سماح' : 'Enable');
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(_S.base, _S.xs, _S.base, _S.sm),
       child: Container(
@@ -550,29 +571,31 @@ class AllVendorsCarListView extends GetView<AllVendorsDashboardController> {
                 color: _C.amberBadge.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(_R.sm),
               ),
-              child: const Icon(
-                Icons.location_off_rounded,
+              child: Icon(
+                isGpsOff
+                    ? Icons.location_disabled_rounded
+                    : Icons.location_off_rounded,
                 size: 20,
-                color: Color(0xFFD97706),
+                color: const Color(0xFFD97706),
               ),
             ),
             const SizedBox(width: _S.md),
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Location Access Needed',
-                    style: TextStyle(
+                    title,
+                    style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                       color: Color(0xFF92400E),
                     ),
                   ),
-                  SizedBox(height: 2),
+                  const SizedBox(height: 2),
                   Text(
-                    'Enable to see delivery options',
-                    style: TextStyle(
+                    subtitle,
+                    style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                       color: Color(0xFFB45309),
@@ -584,20 +607,20 @@ class AllVendorsCarListView extends GetView<AllVendorsDashboardController> {
             TextButton(
               onPressed: () async {
                 final locationService = Get.find<LocationService>();
-                await locationService.openAppSettings();
+                await locationService.requestAndEnableLocation(context: context);
                 await controller.retryDeliveryCheck();
               },
               style: TextButton.styleFrom(
                 backgroundColor: _C.amberBadge,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: _S.md, vertical: _S.sm),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: _S.md, vertical: _S.sm),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(_R.sm),
                 ),
               ),
-              child: const Text(
-                'Enable',
-                style: TextStyle(
+              child: Text(
+                buttonText,
+                style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                   color: Colors.white,
@@ -811,14 +834,9 @@ class _PremiumCarCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(_R.xl),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 24,
-              offset: const Offset(0, 8),
-            ),
-            BoxShadow(
-              color: Colors.black.withOpacity(0.02),
-              blurRadius: 4,
-              offset: const Offset(0, 1),
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
@@ -880,40 +898,7 @@ class _PremiumCarCard extends StatelessWidget {
             useShimmer: true,
             fadeIn: true,
           ),
-          // Top gradient for badge visibility
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.center,
-                  colors: [
-                    Colors.black.withOpacity(0.25),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-          // Bottom gradient for smooth transition
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: 40,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                  colors: [
-                    _C.card.withOpacity(0.6),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
+
           // Branch badge
           if (car.vendorLocation?.city != null)
             Positioned(
